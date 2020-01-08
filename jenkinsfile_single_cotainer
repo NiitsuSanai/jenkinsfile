@@ -1,0 +1,29 @@
+node {
+    stage('Checkout') {
+        git SOURCE_REPOSITORY
+    }
+    
+    def customImage = null
+    
+    stage('Build') {
+        customImage = docker.build(IMAGE_NAMESPACE+'/'+IMAGE_NAME+':'+IMAGE_TAG)
+    }
+
+    stage('Push') {
+        docker.withRegistry('https://registry.hub.docker.com', 'DockerHub_Credential') {
+            customImage.push(IMAGE_TAG)
+            if(IS_LATEST.toBoolean()) {
+                customImage.push('latest')                
+            }
+        }
+
+        /*
+        docker.withRegistry('https://'+AWS_ACCOUNT_ID+'.dkr.ecr.'+AWS_REGION+'.amazonaws.com', 'ecr:'+AWS_REGION+':'+AWS_CREDENTIAL_ID) {
+            customImage.push(IMAGE_TAG)
+            if(IS_LATEST.toBoolean()) {
+                customImage.push('latest')                
+            }
+        }
+        */
+    }
+}
